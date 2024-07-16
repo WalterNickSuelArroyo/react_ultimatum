@@ -1,6 +1,5 @@
 # 6. INTRODUCCION A LA SECCION
 
-
 # 7. TEMAS PUNTUALES DE LA SECCION
 
 ![](imagenes/1.PNG)
@@ -63,3 +62,5 @@ Ejemplo 2:
 # 10. INTRODUCCION A BABEL
 
 - Babel: Es un transpilador de codigo abierto y gratuito que se utiliza principalmente para convertir codigo JavaScript modermo a una version compatible con navegadores mas antiguos. Esto permite a los desarrolladores utilizar las ultimas caracteristicas de JavaScript sin preocuparse por la compatibilidad con navegadores antiguos.
+
+https://babeljs.io/
