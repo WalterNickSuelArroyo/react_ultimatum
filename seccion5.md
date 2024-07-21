@@ -317,22 +317,364 @@ describe('Pruebas en 08-imp-exp', () => {
 
 # 60. Pruebas con tareas asincronas
 
+```js
+import { getHeroeByIdAsync } from "../../src/base-pruebas/09-promesas";
+
+describe('Pruebas en 09-promesas', () => {
+    test('getHeroeByIdAsync debe de retornar un heroe', (done) => {
+        const id = 1;
+        getHeroeByIdAsync(id)
+            .then(hero => {
+                expect(hero).toEqual({
+                    id: 1,
+                    name: 'Batman',
+                    owner: 'DC'
+                });
+                done();
+            })
+    })
+
+    test('getHeroeByIdAsync debe de obtener un error si heroe no existe', (done) => {
+        const id = 100;
+        getHeroeByIdAsync(id)
+            .catch(error => {
+                expect(error).toBe(`No se pudo encontrar el héroe ${id}`)
+                done();
+            })
+    })
+})
+```
+
+done(): Se llama a esta función para indicar que la prueba ha terminado. Esto es necesario porque la prueba es asíncrona; done asegura que Jest (el marco de pruebas) sepa cuándo ha terminado la prueba.
+
 # 61. Pruebas con async-await
+
+```js
+import { getImagen } from "../../src/base-pruebas/11-async-await"
+
+describe('Pruebas en 11-async-await', () => {
+    test('getImagen debe de retornar un URL de la imagen', async () => {
+        const url = await getImagen();
+        expect(typeof url).toBe('string')
+    })
+})
+```
+
+Adicionalmente, si nos marca error esa prueba (suele suceder en versiones anteriores a node 18) podemos configurar algunas cosas
+
+Creamos el archivo jest.config.cjs
+```js
+module.exports = {
+    // TODO: jsdom,
+    setupFiles: ['./jest.setup.js']
+}
+```
+
+Creamos el archivo jest.setup.js
+```js
+import 'whatwg-fetch';
+```
 
 # 62. Evaluar el Catch en el async-await
 
+Si borramos el API key y hacemos la prueba: 
+
+```js
+test('getImagen debe de retornar un error si no tenemos API key', async () => {
+        const resp = await getImagen();
+        expect(resp).toBe('No se encontro la imagen')
+    })
+```
+
 # 63. Pruebas sobre componentes de React
+
+https://jestjs.io/docs/getting-started
+https://testing-library.com/
+
+Trabajar con Jest y React Testing Library juntos es conveniente por varias razones:
+
+1. Compatibilidad y Facilidad de Uso:
+Jest es un framework de pruebas de JavaScript que viene con un conjunto de características poderosas para realizar pruebas unitarias, de integración y de extremo a extremo. Es fácil de configurar y usar con React.
+React Testing Library está diseñada específicamente para probar componentes de React de manera que se enfoquen en cómo los usuarios interactúan con la interfaz. Se integra perfectamente con Jest, lo que hace que la configuración sea sencilla.
+2. Pruebas Basadas en la Interacción del Usuario:
+React Testing Library fomenta las pruebas basadas en la interacción del usuario, lo cual es una práctica recomendada para asegurar que los componentes funcionan correctamente desde la perspectiva del usuario.
+En lugar de probar la implementación interna de los componentes, se centra en cómo los componentes se comportan en situaciones del mundo real.
+3. Asincronía Simplificada:
+Jest tiene un excelente soporte para pruebas asíncronas, permitiendo el uso de promesas, async/await y funciones de callback (done).
+React Testing Library complementa esto proporcionando utilidades como waitFor y findBy, que facilitan la espera de cambios en la interfaz de usuario, como la aparición o desaparición de elementos.
+4. Buenas Prácticas y Mejor Mantenimiento:
+React Testing Library promueve buenas prácticas al desalentar pruebas que dependan del estado interno o la implementación de los componentes. Esto hace que las pruebas sean más robustas y menos propensas a fallar debido a cambios internos en el código.
+El enfoque en pruebas basadas en la interacción del usuario también asegura que las pruebas sean más fáciles de mantener y que reflejen mejor el comportamiento esperado de la aplicación.
+5. Funciones y API Potentes:
+Jest ofrece características como mocks, spies, temporizadores, snapshots, y más, que son muy útiles para una amplia gama de casos de prueba.
+React Testing Library proporciona métodos intuitivos para seleccionar y verificar elementos en el DOM, como getByText, getByRole, getByLabelText, entre otros, que son más resistentes a los cambios en el código.
+
+Para usar react testing library si usamos vite: yarn add --dev @testing-library/react
 
 # 64. Pruebas en FirstApp - Componentes de React
 
+```js
+//Archivo jest.config.cjs
+module.exports = {
+    testEnvironment: 'jest-environment-jsdom',
+    setupFiles: ['./jest.setup.js']
+}
+```
+
+```js
+// Archivo babel.config.cjs
+module.exports = {
+    presets: [
+        ['@babel/preset-env', {targets: {esmodules: true}}],
+        ['@babel/preset-react', {runtime: 'automatic'}],
+    ],
+};
+```
+
+```js
+import { FirstApp } from "../src/FirstApp"
+import { render } from "@testing-library/react";
+
+describe('Pruebas en FirstApp', () => {
+    test('Debe de hacer match con el snapshot', () => {
+        const title = 'Hola, Soy Gokuuuu'; 
+         render(<FirstApp title={title} />)
+    })
+})
+```
+
 # 65. Probar FirstApp
+
+- render es una función de React Testing Library que renderiza el componente FirstApp con la prop title que hemos definido.
+- render devuelve un objeto que incluye, entre otras cosas, container, que contiene el HTML renderizado del componente.
+- expect es una función de Jest para realizar aserciones. En este caso, se espera que container coincida con el snapshot.
+- toMatchSnapshot es un matcher de Jest que compara el HTML renderizado con un snapshot previamente guardado. Si no existe un snapshot, Jest creará uno nuevo y lo guardará. Si existe, Jest comparará el HTML actual con el snapshot existente.
+
+*¿Qué es un Snapshot?*
+
+Un snapshot es una representación de la salida renderizada de un componente en un momento específico. Esencialmente, captura el estado del componente y lo guarda en un archivo de snapshot. Este archivo se guarda en una carpeta __snapshots__ junto al archivo de prueba.
+
+*¿Por qué usar Snapshots?*
+1. Detección de Cambios No Intencionales: Los snapshots son útiles para detectar cambios no intencionales en el componente. Si se modifica el componente de una manera que cambia su salida HTML, la comparación de snapshots fallará, alertándote del cambio.
+
+2. Documentación: Los snapshots también actúan como una forma de documentación, mostrando cómo se supone que debe renderizarse un componente con ciertas props.
+
+*Flujo de Trabajo con Snapshots*
+
+1. Primera Ejecución: En la primera ejecución de la prueba, Jest creará un archivo de snapshot si no existe. Este archivo contendrá la salida renderizada del componente.
+
+2. Ejecuciones Posteriores: En ejecuciones posteriores, Jest comparará la salida renderizada actual del componente con el snapshot existente. Si hay discrepancias, la prueba fallará, indicando que ha habido un cambio en la salida del componente.
+
+3. Actualización de Snapshots: Si los cambios en la salida del componente son intencionales y correctos, puedes actualizar los snapshots ejecutando Jest con la opción --updateSnapshot (o -u).
+
+```js
+import { FirstApp } from "../src/FirstApp"
+import { render } from "@testing-library/react";
+
+describe('Pruebas en FirstApp', () => {
+    test('Debe de hacer match con el snapshot', () => {
+        const title = 'Hola, Soy Goku';
+        const {container} = render(<FirstApp title={title} />)
+        expect(container).toMatchSnapshot();
+    });
+
+    test('Debe de mostrar el titulo en un h1', () => {
+        const title = 'Hola, soy Goku';
+        const {container, getByText} = render(<FirstApp title={title} />)
+        expect(getByText(title)).toBeTruthy();
+        const h1 = container.querySelector('h1');
+        expect(h1.innerHTML).toContain(title)
+    })
+})
+```
+
+Para el segundo test:
+
+Esta prueba está diseñada para verificar que el componente FirstApp muestra el título en un elemento h1.
+
+- render es una función de React Testing Library que renderiza el componente FirstApp con la prop title que hemos definido.
+
+- render devuelve un objeto que incluye, entre otras cosas, container, que contiene el HTML renderizado del componente, y getByText, una función para seleccionar elementos por su contenido de texto.
+
+- getByText(title) selecciona el elemento que contiene el texto igual a title. Si encuentra el elemento, lo devuelve; de lo contrario, lanza un error.
+
+- expect(...).toBeTruthy() verifica que el elemento seleccionado por getByText existe en el DOM. Si getByText no encuentra el texto, la prueba fallará.
+
+- container.querySelector('h1') selecciona el primer elemento h1 dentro del contenedor del componente renderizado.
+
+- expect(h1.innerHTML).toContain(title) verifica que el contenido HTML del elemento h1 contiene el texto title. Si el h1 no contiene el texto, la prueba fallará.
+
+*¿Qué Hace Esta Prueba?*
+
+1. Renderiza el componente FirstApp con una prop title igual a 'Hola, soy Goku'.
+2. Verifica que el texto 'Hola, soy Goku' aparece en el DOM utilizando getByText.
+3. Selecciona el primer elemento h1 en el contenedor renderizado.
+4. Verifica que el elemento h1 contiene el texto 'Hola, soy Goku'.
+
+*¿Por Qué Es Útil Esta Prueba?*
+
+- Confirma que el componente muestra el título: Esta prueba asegura que el componente FirstApp renderiza correctamente el texto del título en el DOM.
+
+- Verifica la estructura del DOM: La prueba verifica específicamente que el título se muestra dentro de un elemento h1, lo cual es importante para mantener la estructura y semántica HTML correcta.
+
+- Ayuda a detectar regresiones: Si alguien accidentalmente cambia la estructura del componente o el nombre de la etiqueta donde se muestra el título, esta prueba fallará, alertando sobre el cambio.
 
 # 66. getByTestId y otras props
 
+```js
+test('debe de mostrar el subtitulo enviado por props', () => {
+        const title = 'Hola, soy Goku';
+        const subTitle = 'Soy un subtitulo';
+        const { getByText } = render(
+            <FirstApp
+                title={title}
+                subTitle={subTitle}
+            />)
+        expect(getByText(subTitle)).toBeTruthy();
+    })
+```
+
+- Aquí se definen dos constantes: title con el valor 'Hola, soy Goku' y subTitle con el valor 'Soy un subtitulo'. Estas constantes se utilizarán como props para el componente FirstApp.
+
+- render es una función de React Testing Library que renderiza el componente FirstApp con las props title y subTitle que hemos definido.
+
+- render devuelve un objeto que incluye, entre otras cosas, getByText, una función para seleccionar elementos por su contenido de texto.
+
+- getByText(subTitle) selecciona el elemento que contiene el texto igual a subTitle. Si encuentra el elemento, lo devuelve; de lo contrario, lanza un error.
+
+- expect(...).toBeTruthy() verifica que el elemento seleccionado por getByText existe en el DOM. Si getByText no encuentra el texto, la prueba fallará.
+
 # 67. Screen - Testing Library
+
+```js
+import { FirstApp } from "../src/FirstApp"
+import { render, screen } from "@testing-library/react";
+
+describe('Pruebas en FirstApp', () => {
+    const title = 'Hola, soy goku';
+    const subTitle = 'Soy un subtitulo';
+
+    test('debe de hacer match con el snapshot', () => {
+        const { container } = render(<FirstApp title={title} />);
+        expect(container).toMatchSnapshot();
+    });
+
+
+    /*
+    Esta prueba está diseñada para verificar que el componente FirstApp muestra el mensaje pasado como prop en algún lugar del DOM.
+    - render es una función de React Testing Library que renderiza el componente FirstApp con la prop title que hemos definido.
+    - En este contexto, title debe ser una variable definida anteriormente en el archivo de prueba con el valor 'Hola, soy Goku'.
+    - screen es un objeto de React Testing Library que proporciona acceso al DOM renderizado. Se usa para seleccionar elementos de la interfaz de usuario.
+    - getByText(title) selecciona el elemento que contiene el texto igual a title. Si encuentra el elemento, lo devuelve; de lo contrario, lanza un error.
+    - expect(...).toBeTruthy() verifica que el elemento seleccionado por getByText existe en el DOM. Si getByText no encuentra el texto, la prueba fallará.
+    */
+    test('debe de mostrar el mensaje "Hola, soy goku"', () => {
+        render(<FirstApp title={title} />);
+        expect(screen.getByText(title)).toBeTruthy();
+    });
+
+    /*
+    Esta prueba está diseñada para verificar que el componente FirstApp muestra el título pasado como prop en un elemento h1.
+    - render es una función de React Testing Library que renderiza el componente FirstApp con la prop title que hemos definido.
+    - Este paso renderiza el componente en un contenedor DOM virtual para pruebas.
+    - screen es un objeto de React Testing Library que proporciona acceso al DOM renderizado. Se usa para seleccionar elementos de la interfaz de usuario.
+    - getByRole('heading', { level: 1 }) selecciona el elemento h1 en el DOM, ya que los elementos h1 tienen el rol de "heading" (encabezado) con nivel 1.
+    - innerHTML devuelve el contenido HTML del elemento seleccionado.
+    - expect(...).toContain(title) verifica que el contenido HTML del elemento h1 contiene el texto title. Si el h1 no contiene el texto, la prueba fallará.
+    */
+    test('debe de mostrar el titulo en un h1', () => {
+        render(<FirstApp title={title} />);
+        expect(screen.getByRole('heading', { level: 1 }).innerHTML).toContain(title);
+    });
+
+    /*
+    Esta prueba está diseñada para verificar que el componente FirstApp muestra el subtítulo que se le pasa a través de las props, y que este subtítulo aparece dos veces en el DOM.
+    - render es una función de React Testing Library que renderiza el componente FirstApp con las props title y subTitle que hemos definido.
+    - Este paso renderiza el componente en un contenedor DOM virtual para pruebas.
+    - screen es un objeto de React Testing Library que proporciona acceso al DOM renderizado. Se usa para seleccionar elementos de la interfaz de usuario.
+    - getAllByText(subTitle) selecciona todos los elementos que contienen el texto igual a subTitle.
+    - .length devuelve el número de elementos encontrados que contienen el subtítulo.
+    - expect(...).toBe(2) verifica que la cantidad de elementos encontrados es exactamente 2. Si no se encuentran exactamente dos elementos con el subtítulo, la prueba fallará.
+    */
+    test('debe de mostrar el subtitulo enviado por props', () => {
+        render(
+            <FirstApp
+                title={title}
+                subTitle={subTitle}
+            />
+        );
+        expect(screen.getAllByText(subTitle).length).toBe(2);
+    })
+})
+```
 
 # 68. Pruebas básicas del CounterApp
 
+```js
+// tarea
+// Pruebas en el <CounterApp />
+// test: debe de hacer match con el snapshot
+// test: debe de mostrar el valor inicial de 100 <CounterApp value={100}>
+
+import { CounterApp } from "../src/CounterApp"
+import { render, screen } from '@testing-library/react'
+
+describe('Haciendo pruebas en el archivo CounterApp', () => {
+    const value = 10;
+
+    test('debe de hacer match con el snapshot', () => {
+        const {container} = render(< CounterApp value={value}/>)
+        expect(container).toMatchSnapshot();
+    });
+
+    test('debe de mostrar el valor inicial de 100 <CounterApp value={100}>', () => { 
+         render(<CounterApp value={100}/>)
+         expect(screen.getByText(100)).toBeTruthy();
+        //  expect(screen.getByRole('heading', {level: 2}).innerHTML).toContain('100');
+    })
+})
+```
+
 # 69. Simular eventos - Click
 
+```js
+import { CounterApp } from "../src/CounterApp"
+import { fireEvent, render, screen } from '@testing-library/react'
+
+describe('Haciendo pruebas en el archivo CounterApp', () => {
+    const value = 10;
+
+    test('debe de incrementar con el boton +1', () => { 
+        render(<CounterApp value={value}/>) ;
+        fireEvent.click(screen.getByText('+1'));
+        expect(screen.getByText('11')).toBeTruthy();
+    });
+
+    test('debe de decrementar con el boton -1', () => { 
+        render(<CounterApp value={value}/>) ;
+        fireEvent.click(screen.getByText('-1'));
+        expect(screen.getByText('9')).toBeTruthy();
+    });
+
+    test('debe de funcionar el boton de reset', () => { 
+        render(<CounterApp value={value}/>) ;
+        fireEvent.click(screen.getByText('+1'));
+        fireEvent.click(screen.getByText('+1'));
+        fireEvent.click(screen.getByText('+1'));
+
+        // Primera forma
+        // fireEvent.click(screen.getByText('Reset'));
+        // expect(screen.getByText(value)).toBeTruthy();
+
+        // Segunda forma
+        fireEvent.click(screen.getByRole('button', {name: 'btn-reset'}));
+        expect(screen.getByText(value)).toBeTruthy();
+    })
+})
+```
+
 # 70. Codigo fuente de la seccion
+
+Aquí les dejo el código fuente de la sección por si lo llegan a necesitar y comparar contra el suyo:
+
+https://github.com/Klerith/react-vite-counter-app/tree/fin-seccion-5
