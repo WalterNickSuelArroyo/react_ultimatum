@@ -398,19 +398,223 @@ export const GifGrid = ({ category }) => {
 
 # 83. Fetch API - Obtener las imagenes deseadas
 
+Este endpoint te permite acceder instantáneamente a la biblioteca de millones de GIFs y stickers de Giphy introduciendo una palabra o frase. 
+
+https://developers.giphy.com/docs/api/endpoint#trending
+
+Para probarlo usaremos postman:
+
+![](imagenes/10.PNG)
+
+Ahora agregando un parametro q con &q para buscar el gift que deseamos
+
+![](imagenes/11.PNG)
+
+```jsx
+import { getGifs } from "../helpers/getGifs";
+
+export const GifGrid = ({ category }) => {
+    getGifs(category);
+
+    return (
+        <>
+            <h3>{category}</h3>
+        </>
+    )
+}
+```
+
+```js
+export const getGifs = async(category) => {
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=ojN0FfV6LQmsImQjrTI6xWUSIUUXA9Sp&q=${category}&limit=20`;
+    const resp = await fetch(url);
+    const {data} = await resp.json();
+
+    const gifs = data.map(img => ({
+        id: img.id,
+        title: img.title,
+        url: img.images.downsized_medium.url
+    }));
+
+    console.log(gifs);
+    return gifs;
+}
+```
+
 # 84. useEffect
-
 # 85. Demostracion de produccion rapido
-
 # 86. Mostrar los titulos de las imagenes
-
 # 87. className - Clases de css
-
 # 88. Custom Hook - useFetchGifs
-
 # 89. Mostrar mensajes de carga
-
 # 90. Archivos de barril
 
+![](imagenes/12.PNG)
+
+```jsx
+// Archivo main.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { GifExpertApp } from './GifExpertApp'
+import './styles.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <GifExpertApp />
+  </React.StrictMode>
+)
+```
+
+```jsx
+// Archivo GifExpertApp.jsx
+import { useState } from "react";
+import { AddCategory, GifGrid } from "./components";
+
+export const GifExpertApp = () => {
+    const [categories, setCategories] = useState(['One Punch']);
+
+    const onAddCategory = (newCategory) => {
+        if (categories.includes(newCategory)) return;
+        setCategories([newCategory, ...categories])
+    }
+    return (
+        <>
+            <h1>GifExpertApp</h1>
+
+            <AddCategory
+                onNewCategory={onAddCategory}
+            />
+
+            {
+                categories.map((category =>
+                    <GifGrid key={category} category={category} />
+                ))
+            }
+
+        </>
+    )
+}
+```
+
+```jsx
+//Archivo AddCategory.jsx
+import { useState } from "react"
+
+export const AddCategory = ({ onNewCategory }) => {
+    const [inputValue, setinputValue] = useState('')
+
+    const onInputChange = ({ target }) => {
+        setinputValue(target.value);
+    }
+
+    const onSubmit = (event) => {
+        event.preventDefault();
+        if (inputValue.trim().length <= 1) return;
+        onNewCategory(inputValue.trim());
+        setinputValue('')
+    }
+
+    return (
+        <form onSubmit={onSubmit}>
+            <input
+                type="text"
+                placeholder="Buscar Gifs"
+                value={inputValue}
+                onChange={onInputChange}
+            />
+        </form>
+    )
+}
+```
+
+```jsx
+// Archivo GifGrid.jsx
+import { GifItem } from "./GifItem";
+import { useFetchGifs } from "../hooks/useFetchGifs";
+
+export const GifGrid = ({ category }) => {
+    const {images, isLoading} = useFetchGifs(category);
+
+    return (
+        <>
+            <h3>{category}</h3>
+            {
+                isLoading && (<h2>Cargando...</h2>)
+            }
+            <div className="card-grid">
+                {
+                    images.map((image) => (
+                        <GifItem key={image.id} {...image} />
+                    ))
+                }
+            </div>
+        </>
+    )
+}
+```
+
+```jsx
+// Archivo GifItem.jsx
+
+export const GifItem = ({ title, url }) => {
+    return (
+        <div className="card">
+            <img src={url} alt={title} />
+            <p>{title}</p>
+        </div>
+    )
+}
+```
+
+```js
+// Archivo getGifs.js
+export const getGifs = async(category) => {
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=ojN0FfV6LQmsImQjrTI6xWUSIUUXA9Sp&q=${category}&limit=10`;
+    const resp = await fetch(url);
+    const {data} = await resp.json();
+
+    const gifs = data.map(img => ({
+        id: img.id,
+        title: img.title,
+        url: img.images.downsized_medium.url
+    }));
+
+    return gifs;
+}
+```
+
+```js
+// Archivo useFetchGifs.js
+import { useEffect, useState } from "react";
+import { getGifs } from "../helpers/getGifs";
+
+export const useFetchGifs = (category) => {
+    const [images, setImages] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const getImages = async () => {
+        const newImages = await getGifs(category);
+        setImages(newImages);
+        setIsLoading(false);
+    }
+    useEffect(() => {
+        getImages();
+    }, []);
+    return {
+        images,
+        isLoading
+    }
+}
+```
+
+```js
+// Archivo index.js
+export * from "./AddCategory";
+export * from "./GifGrid";
+export * from "./GifItem";
+```
+
 # 91. Codigo fuente de la seccion
+
+https://github.com/Klerith/react-vite-gif-expert/tree/fin-seccion-6
+
 
