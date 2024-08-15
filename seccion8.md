@@ -352,3 +352,188 @@ describe('Pruebas en <AddCategory />', () => {
     */
 })
 ```
+
+# 109. Pruebas del componente GifGrid - Mock customHook
+
+```jsx
+import {render, screen} from '@testing-library/react';
+import {GifGrid} from '../../src/components/GifGrid'
+describe('Pruebas en <GifGrid />', () => {
+    const category = 'One punch';
+    test('debe de mostrar el loading inicialmente', () => {
+        render(<GifGrid category={category} />)
+        expect(screen.getByText('Cargando...'));
+        expect(screen.getByText(category));
+    })
+})
+/*
+En este caso, la prueba se asegura de que el componente <GifGrid /> muestre el texto de carga y el texto de la categoría al ser renderizado.
+
+render(<GifGrid category={category} />): Renderiza el componente <GifGrid /> con el prop category establecido en 'One punch'. Esto simula cómo se comportaría el componente en una aplicación real cuando se le pasa esta prop
+
+expect(screen.getByText('Cargando...')): Se espera que el texto 'Cargando...' esté presente en el DOM después de renderizar el componente. 
+
+expect(screen.getByText(category)): Similar a la verificación anterior, se espera que el texto de la categoría también esté presente en el DOM.
+*/
+
+test('debe de mostrar items cuando se cargan las imagenes useFetchGif', () => {
+    
+})
+```
+
+# 110. Hacer un mock completo de un Custom Hook
+
+```jsx
+import {render, screen} from '@testing-library/react';
+import {GifGrid} from '../../src/components/GifGrid'
+import { useFetchGifs } from '../../src/hooks/useFetchGifs';
+
+jest.mock('../../src/hooks/useFetchGifs');
+
+describe('Pruebas en <GifGrid />', () => {
+    const category = 'One punch';
+    test('debe de mostrar el loading inicialmente', () => {
+        useFetchGifs.mockReturnValue({
+            images: [],
+            isLoading: true
+        });
+
+        render(<GifGrid category={category} />)
+        expect(screen.getByText('Cargando...'));
+        expect(screen.getByText(category));
+    })
+    test('debe de mostrar items cuando se cargan las imagenes useFetchGif', () => {
+        const gifs = [
+            {
+                id: 'ABC',
+                title: 'Saitama',
+                url: 'https://localhost/saitama.jpg'
+            },
+            {
+                id: '123',
+                title: 'Goku',
+                url: 'https://localhost/goku.jpg'
+            }
+        ]
+        useFetchGifs.mockReturnValue({
+            images: gifs,
+            isLoading: false
+        });
+    
+        render(<GifGrid category={category} /> );
+        expect(screen.getAllByRole('img').length).toBe(2);
+    })
+    /*
+    El propósito de esta prueba es verificar que el componente <GifGrid /> muestra correctamente las imágenes cuando useFetchGifs retorna una lista de imágenes y el estado de carga (isLoading) es false
+
+    Crea un arreglo de objetos que simulan las imágenes que deberían ser mostradas por el componente <GifGrid />. Cada objeto tiene un id, un title y una url.
+
+    Configura el mock de useFetchGifs para que devuelva el arreglo gifs como las imágenes y isLoading como false. Esto simula el comportamiento del hook cuando ya se han cargado las imágenes.
+
+    render(<GifGrid category={category}: Renderiza el componente <GifGrid /> con la categoría definida en la prueba. En este caso, el componente debería recibir las imágenes del mock y no mostrar un mensaje de carga.
+
+    expect(screen.getAllByRole('img').length).toBe(2): Usa screen.getAllByRole('img') para obtener todos los elementos img renderizados en el componente. Luego, verifica que la longitud de esta lista sea 2, lo que indica que se están mostrando dos imágenes en la interfaz.
+    */
+})
+```
+
+# 111. Pruebas sobre customHooks
+
+```js
+import { useFetchGifs } from "../../src/hooks/useFetchGifs";
+import {renderHook, waitFor} from '@testing-library/react'
+
+describe('Pruebas en el hook useFetchGifs', () => {
+    test('debe de regresar el estado inicial', () => {
+        const {result} = renderHook(() => useFetchGifs('One Punch'));
+        const {images, isLoading} = result.current;
+
+        expect(images.length).toBe(0);
+        expect(isLoading).toBeTruthy();
+    })
+
+    /*
+    const { result } = renderHook(() => useFetchGifs('One Punch')): renderHook es una función proporcionada por @testing-library/react para renderizar hooks en un entorno de prueba. Aquí se está usando para renderizar el hook useFetchGifs con la categoría 'One Punch'. result contiene el valor actual del hook después de que ha sido renderizado. result.current tiene el estado actual del hook.
+
+    const { images, isLoading } = result.current: Se extraen images y isLoading del estado actual del hook. Estos son los valores que el hook useFetchGifs debe retornar, según su implementación.
+
+    expect(images.length).toBe(0): Verifica que el array images está vacío al principio. Esto confirma que, al inicio, el hook no tiene imágenes cargadas.
+
+    expect(isLoading).toBeTruthy(): Verifica que isLoading es true al inicio. Esto asegura que el hook está en estado de carga cuando se inicializa.
+
+    */
+
+    test('debe de retornar un arreglo de imagenes y isLoading en false', async() => {
+        const {result} = renderHook(() => useFetchGifs('One Punch'));
+
+        await waitFor(
+            () => expect(result.current.images.length).toBeGreaterThan(0)
+        );
+        const {images, isLoading} = result.current;
+
+        expect(images.length).toBeGreaterThan(0);
+        expect(isLoading).toBeFalsy();
+    })
+
+    /*
+    El segundo test está diseñado para verificar que el hook useFetchGifs: Carga correctamente las imágenes y actualiza su estado con al menos una imagen después de la carga. Esto se asegura mediante waitFor, que espera a que el array images tenga elementos. Finaliza la carga correctamente, es decir, que isLoading se vuelve false cuando las imágenes están listas.
+
+    waitFor es una función que espera a que la condición dentro de su callback sea verdadera. En este caso, espera hasta que el array images tenga al menos un elemento (length > 0), lo cual indica que las imágenes han sido cargadas y actualizadas en el estado del hook.
+
+    const { images, isLoading } = result.current: Después de que waitFor confirma que se han cargado las imágenes, se extraen images y isLoading del estado actual del hook.
+
+    expect(images.length).toBeGreaterThan(0): Verifica que el array images tiene al menos un elemento, lo que indica que se han cargado imágenes. El tamaño del array debe ser mayor que 0
+
+    expect(isLoading).toBeFalsy(): Verifica que isLoading es false, lo cual indica que el hook ha terminado de cargar las imágenes y ya no está en estado de carga.
+    */
+})
+```
+
+# 112. Pruebas de tarea
+
+```jsx
+import { fireEvent, render, screen } from "@testing-library/react";
+import { GifExpertApp } from "../src/GifExpertApp";
+
+describe("Pruebas en <GifExpertApp />", () => {
+  test("debe de mostrar el titulo correcto", () => {
+    render(<GifExpertApp />);
+    const titleElement = screen.getByText("GifExpertApp", { selector: "h1" });
+    expect(titleElement).toBeTruthy();
+  });
+
+  test("debe de iniciar con la categoria One Punch", () => {
+    render(<GifExpertApp />);
+    const categoryElement = screen.getByText("One Punch");
+    expect(categoryElement).toBeTruthy();
+  });
+
+  test("debe de agregar una nueva categoría si no está duplicada", () => {
+    render(<GifExpertApp />);
+    const input = screen.getByPlaceholderText("Buscar Gifs");
+
+    fireEvent.change(input, { target: { value: "New Category" } });
+
+    fireEvent.submit(input);
+
+    expect(screen.getByText("New Category")).toBeTruthy();
+  });
+  test("no debe agregar una categoría si ya está duplicada", () => {
+    render(<GifExpertApp />);
+    const input = screen.getByPlaceholderText("Buscar Gifs");
+
+    fireEvent.change(input, { target: { value: "One Punch" } });
+    fireEvent.submit(input);
+
+    fireEvent.change(input, { target: { value: "One Punch" } });
+    fireEvent.submit(input);
+
+    const categoryElements = screen.getAllByText("One Punch");
+    expect(categoryElements.length).toBe(1);
+  });
+});
+```
+
+# 113. Codigo fuente de la seccion
+
+https://github.com/Klerith/react-gif-expert/tree/fin-seccion-8
